@@ -21,7 +21,7 @@ output/
 !Kbuild
 
 # Ignore the config Makefile, as this is specific to each user
-/config.mk
+# /config.mk
 
 # Allow for the Travis CL file
 !/.travis.yml
