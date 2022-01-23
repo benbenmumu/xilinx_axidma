@@ -32,7 +32,7 @@ ARCH = arm
 # compile the driver against. If unspecified, the system default
 # `/lib/modules/$(uname -r)/build` is used. If CROSS_COMPILE is defined, then
 # this variable must also be defined. This path can be absolute, or relative.
-KBUILD_DIR = /home/mumu/zynq_workspace/dma_test/system/build/tmp/work-shared/plnx-zynq7/kernel-source
+KBUILD_DIR = /home/mumu/zynq_workspace/dma_test_tx/system/build/tmp/work-shared/plnx-zynq7/kernel-source
 
 # The path to the output directory, where all of the compiled files, the
 # driver's kernel object, the example executables, and the AXI DMA shared
