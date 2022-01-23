@@ -99,6 +99,7 @@ struct axidma_transaction {
     int channel_id;                 // The id of the DMA channel to use
     void *buf;                      // The buffer used for the transaction
     size_t buf_len;                 // The length of the buffer
+    int sg_len;                     // sg list length
 
     // Kept as a union for extend ability.
     union {
@@ -116,6 +117,7 @@ struct axidma_inout_transaction {
     void *rx_buf;                   // The buffer to place the data in
     size_t rx_buf_len;              // The length of the receive buffer
     struct axidma_video_frame rx_frame; // Frame information for receive.
+    int sg_len;                     // sg list length
 };
 
 struct axidma_video_transaction {

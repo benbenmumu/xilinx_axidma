@@ -197,12 +197,13 @@ static int transfer_file(axidma_dev_t dev, struct dma_transfer *trans,
     // Perform the transfer
     // Perform the main transaction
     gettimeofday(&starttime,0);
-    int len_single = 65536;
-    int times = trans->output_size / len_single;
-    for (int i = 0; i < times; i++)
+    int len_single = 1024;
+    int sg_len = 10;
+    int times = trans->output_size / (len_single * sg_len);
+    for (int i = 0; i < times - 1; i++)
     {
         rc = axidma_oneway_transfer(dev, trans->output_channel,
-                                    trans->output_buf + i * len_single, len_single, true);
+                                    trans->output_buf + 0 * (len_single * sg_len), len_single, sg_len, true);
         if (rc < 0) {
             fprintf(stderr, "DMA read transaction failed.\n");
             goto free_output_buf;

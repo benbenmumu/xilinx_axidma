@@ -440,7 +440,7 @@ void axidma_unregister_buffer(axidma_dev_t dev, void *user_addr)
 /* This performs a one-way transfer over AXI DMA, the direction being specified
  * by the user. The user determines if this is blocking or not with `wait. */
 int axidma_oneway_transfer(axidma_dev_t dev, int channel, void *buf,
-        size_t len, bool wait)
+        size_t len, int sg_len, bool wait)
 {
     int rc;
     struct axidma_transaction trans;
@@ -455,6 +455,7 @@ int axidma_oneway_transfer(axidma_dev_t dev, int channel, void *buf,
     trans.channel_id = channel;
     trans.buf = buf;
     trans.buf_len = len;
+    trans.sg_len = sg_len;
     axidma_cmd = dir_to_ioctl(dma_chan->dir);
 
     // Perform the given transfer

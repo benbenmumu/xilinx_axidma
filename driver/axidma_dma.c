@@ -108,7 +108,7 @@ static int axidma_init_sg_entry(struct axidma_device *dev,
     dma_addr_t dma_addr;
 
     // Get the DMA address from the user virtual address
-    dma_addr = axidma_uservirt_to_dma(dev, buf, buf_len);
+    dma_addr = axidma_uservirt_to_dma(dev, buf + index * buf_len, buf_len);
     if (dma_addr == (dma_addr_t)NULL) {
         axidma_err("Requested transfer address %p does not fall within a "
                    "previously allocated DMA buffer.\n", buf);
@@ -355,9 +355,9 @@ int axidma_set_signal(struct axidma_device *dev, int signal)
 int axidma_read_transfer(struct axidma_device *dev,
                          struct axidma_transaction *trans)
 {
-    int rc;
+    int rc, index;
     struct axidma_chan *rx_chan;
-    struct scatterlist sg_list;
+    struct scatterlist sg_list[trans->sg_len];
     struct axidma_transfer rx_tfr;
 
     // Get the channel with the given channel id
@@ -369,16 +369,19 @@ int axidma_read_transfer(struct axidma_device *dev,
     }
 
     // Setup the scatter-gather list for the transfer (only one entry)
-    sg_init_table(&sg_list, 1);
-    rc = axidma_init_sg_entry(dev, &sg_list, 0, trans->buf,
+    sg_init_table(sg_list, trans->sg_len);
+    for (index = 0; index < trans->sg_len; index++)
+    {
+        rc = axidma_init_sg_entry(dev, sg_list, index, trans->buf,
                               trans->buf_len);
-    if (rc < 0) {
-        return rc;
+        if (rc < 0) {
+            return rc;
+        }
     }
-
+  
     // Setup receive transfer structure for DMA
-    rx_tfr.sg_list = &sg_list;
-    rx_tfr.sg_len = 1;
+    rx_tfr.sg_list = sg_list;
+    rx_tfr.sg_len = trans->sg_len;
     rx_tfr.dir = rx_chan->dir;
     rx_tfr.type = rx_chan->type;
     rx_tfr.wait = trans->wait;
@@ -405,9 +408,9 @@ int axidma_read_transfer(struct axidma_device *dev,
 int axidma_write_transfer(struct axidma_device *dev,
                           struct axidma_transaction *trans)
 {
-    int rc;
+    int rc, index;
     struct axidma_chan *tx_chan;
-    struct scatterlist sg_list;
+    struct scatterlist sg_list[trans->sg_len];
     struct axidma_transfer tx_tfr;
 
     // Get the channel with the given id
@@ -419,16 +422,19 @@ int axidma_write_transfer(struct axidma_device *dev,
     }
 
     // Setup the scatter-gather list for the transfer (only one entry)
-    sg_init_table(&sg_list, 1);
-    rc = axidma_init_sg_entry(dev, &sg_list, 0, trans->buf,
-                              trans->buf_len);
-    if (rc < 0) {
-        return rc;
+    sg_init_table(sg_list, trans->sg_len);
+    for (index = 0; index < trans->sg_len; index++)
+    {
+        rc = axidma_init_sg_entry(dev, sg_list, index, trans->buf,
+                                trans->buf_len);
+        if (rc < 0) {
+            return rc;
+        }
     }
 
     // Setup transmit transfer structure for DMA
-    tx_tfr.sg_list = &sg_list;
-    tx_tfr.sg_len = 1;
+    tx_tfr.sg_list = sg_list;
+    tx_tfr.sg_len = trans->sg_len;
     tx_tfr.dir = tx_chan->dir;
     tx_tfr.type = tx_chan->type;
     tx_tfr.wait = trans->wait;
@@ -457,9 +463,9 @@ int axidma_write_transfer(struct axidma_device *dev,
 int axidma_rw_transfer(struct axidma_device *dev,
                        struct axidma_inout_transaction *trans)
 {
-    int rc;
+    int rc, index;
     struct axidma_chan *tx_chan, *rx_chan;
-    struct scatterlist tx_sg_list, rx_sg_list;
+    struct scatterlist tx_sg_list[trans->sg_len], rx_sg_list[trans->sg_len];
     struct axidma_transfer tx_tfr, rx_tfr;
 
     // Get the transmit and receive channels with the given ids.
@@ -478,22 +484,28 @@ int axidma_rw_transfer(struct axidma_device *dev,
     }
 
     // Setup the scatter-gather list for the transfers (only one entry)
-    sg_init_table(&tx_sg_list, 1);
-    rc = axidma_init_sg_entry(dev, &tx_sg_list, 0, trans->tx_buf,
-                              trans->tx_buf_len);
-    if (rc < 0) {
-        return rc;
+    sg_init_table(tx_sg_list, trans->sg_len);
+    for (index = 0; index < trans->sg_len; index++)
+    {
+        rc = axidma_init_sg_entry(dev, tx_sg_list, index, trans->tx_buf,
+                                trans->tx_buf_len);
+        if (rc < 0) {
+            return rc;
+        }
     }
-    sg_init_table(&rx_sg_list, 1);
-    rc = axidma_init_sg_entry(dev, &rx_sg_list, 0, trans->rx_buf,
-                              trans->rx_buf_len);
-    if (rc < 0) {
-        return rc;
+    sg_init_table(rx_sg_list, trans->sg_len);
+    for (index = 0; index < trans->sg_len; index++)
+    {
+        rc = axidma_init_sg_entry(dev, rx_sg_list, index, trans->rx_buf,
+                                trans->rx_buf_len);
+        if (rc < 0) {
+            return rc;
+        }
     }
 
     // Setup receive and trasmit transfer structures for DMA
-    tx_tfr.sg_list = &tx_sg_list,
-    tx_tfr.sg_len = 1,
+    tx_tfr.sg_list = tx_sg_list,
+    tx_tfr.sg_len = trans->sg_len,
     tx_tfr.dir = tx_chan->dir,
     tx_tfr.type = tx_chan->type,
     tx_tfr.wait = false,
@@ -507,8 +519,8 @@ int axidma_rw_transfer(struct axidma_device *dev,
         memcpy(&tx_tfr.frame, &trans->tx_frame, sizeof(tx_tfr.frame));
     }
 
-    rx_tfr.sg_list = &rx_sg_list,
-    rx_tfr.sg_len = 1,
+    rx_tfr.sg_list = rx_sg_list,
+    rx_tfr.sg_len = trans->sg_len,
     rx_tfr.dir = rx_chan->dir,
     rx_tfr.type = rx_chan->type,
     rx_tfr.wait = trans->wait,

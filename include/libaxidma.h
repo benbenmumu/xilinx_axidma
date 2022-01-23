@@ -210,7 +210,7 @@ void axidma_set_callback(axidma_dev_t dev, int channel, axidma_cb_t callback,
  *                 asynchronous. If true, this function will block.
  * @return 0 upon success, a negative number on failure.
  **/
-int axidma_oneway_transfer(axidma_dev_t dev, int channel, void *buf, size_t len,
+int axidma_oneway_transfer(axidma_dev_t dev, int channel, void *buf, size_t len, int sg_len,
         bool wait);
 
 /**
